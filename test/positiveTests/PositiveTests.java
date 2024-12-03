@@ -1,19 +1,16 @@
 package positiveTests;
 
-import com.google.gson.Gson;
-import io.qameta.allure.Description;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
 import org.junit.Before;
 import org.junit.Test;
+import positiveTests.POGOForPositiveTests.responses.LogIn.Root;
 import positiveTests.settingsForPositiveTests.BaseApi;
 
 import java.io.File;
-import java.util.Map;
-
+import positiveTests.POGOForPositiveTests.requests.LogIn;
 
 
 public class PositiveTests {
@@ -42,15 +39,27 @@ public class PositiveTests {
         }
     }
 
+    /*
+        Если бы АПИ возвращал токен - я бы засунул его в статичную переменную и использовал в следующих тестах
+     */
     @Test
     @Step
     @DisplayName("Авторизация пользователя")
     public void logIn() {
-        File file = new File("/Users/denismart/Git/RestAssuredPetStore/test/positiveTests/POGOForPositiveTests/requests/logIn.json");
+        LogIn logIn = new LogIn();
         try {
             Response response = RestAssured.given()
-                    .body(file)
-                    .post("/user/" + file.username);
+                    .param(logIn.getUsername()+logIn.getPassword())
+                    .get("/user/");
+            Root root = response.then().assertThat().statusCode(200).and().extract().body().as(Root.class);
+            if (root.getMessage().contentEquals("logged in user session:")) {
+                System.out.println(root.getMessage());
+            } else {
+                System.out.println("Авторизация не удалась! " + root.getMessage());
+            }
+
+        } catch (Exception e) {
+            System.out.println("Тест №2 по Авторизации провалился!: " + e.getMessage());
         }
 
     }
